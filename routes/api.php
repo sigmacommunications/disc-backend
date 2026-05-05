@@ -20,6 +20,10 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function ()
     Route::post('profile', [\App\Http\Controllers\Api\UserController::class, 'profile']);
     Route::get('track-list', [\App\Http\Controllers\Api\TrackController::class, 'track_list']);
     Route::get('album/{album_id}', [\App\Http\Controllers\Api\TrackController::class, 'album_tracks']);
+
+	
+	Route::get('/events-artist-id/{id}', [\App\Http\Controllers\Api\TrackController::class, 'events_by_artist']);
+
 	
     Route::post('/track/{trackId}/play', [\App\Http\Controllers\Api\TrackController::class, 'trackPlay']);
 	Route::post('/track/download/{trackId}', [\App\Http\Controllers\Api\TrackController::class, 'downloadTrack']);

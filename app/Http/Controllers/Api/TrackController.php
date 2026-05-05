@@ -212,6 +212,14 @@ class TrackController extends BaseController
 		return response()->json(['success'=>true,'message'=>'Event List','event_list'=>$users]);
     }
 
+    public function events_by_artist($artistid)
+    {
+        $users = Event::with('artist')->where('artist_id',$artistid)->get();
+		return response()->json(['success'=>true,'message'=>'Event List','event_list'=>$users]);
+    }
+
+    
+
     // Log the play action for a track
     
     public function approve($id)
