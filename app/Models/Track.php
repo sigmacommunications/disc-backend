@@ -54,6 +54,7 @@ class Track extends Model
     {
         return $this->belongsToMany(Tag::class, 'tag_track');
     }
+    
     // Append the custom attribute to the model
     protected $appends = ['is_liked'];
 }

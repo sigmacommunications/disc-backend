@@ -19,6 +19,7 @@ Route::post('password/code/check', [\App\Http\Controllers\Api\ForgotPasswordCont
 Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function () {	
     Route::post('profile', [\App\Http\Controllers\Api\UserController::class, 'profile']);
     Route::get('track-list', [\App\Http\Controllers\Api\TrackController::class, 'track_list']);
+    Route::get('album/{album_id}', [\App\Http\Controllers\Api\TrackController::class, 'album_tracks']);
 	
     Route::post('/track/{trackId}/play', [\App\Http\Controllers\Api\TrackController::class, 'trackPlay']);
 	Route::post('/track/download/{trackId}', [\App\Http\Controllers\Api\TrackController::class, 'downloadTrack']);

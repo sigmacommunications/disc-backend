@@ -118,6 +118,8 @@ class TrackController extends BaseController
         }
 		return response()->json(['success'=>true,'message'=>'Track Play']);
     }
+
+    
 	
 	public function genres_list()
     {

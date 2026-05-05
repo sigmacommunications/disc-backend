@@ -49,6 +49,17 @@ class RecommendationController extends Controller
 				if ($track->last_played_at && $track->last_played_at >= now()->subDay()) {
 					$trendingScore *= 1.2;
 				}
+			$albumData = null;
+            if ($track->album) {
+                $albumData = [
+                    'id' => $track->album->id,
+                    'title' => $track->album->title,
+                    'slug' => $track->album->slug ?? null,
+                    'cover_image' => $track->album->cover_image_path ?? $track->album->cover_image ?? null,
+                    'release_date' => $track->album->release_date ? $track->album->release_date->format('Y-m-d') : null,
+                    'total_tracks' => $track->album->tracks()->count() ?? 0,
+                ];
+            }
 
 				return [
 					'id' => $track->id,
@@ -68,7 +79,8 @@ class RecommendationController extends Controller
 						'id' => $track->artist->id,
 						'name' => $track->artist->user->name ?? 'Unknown Artist',
 						'profile_image' => $track->artist->user->profile_image ?  $track->artist->user->profile_image : null,
-					]
+					],
+					'album' => $albumData
 				];
 			})->sortByDesc('trending_score')->take($limit)->values();
 
