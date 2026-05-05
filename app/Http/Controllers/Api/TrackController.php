@@ -119,7 +119,11 @@ class TrackController extends BaseController
 		return response()->json(['success'=>true,'message'=>'Track Play']);
     }
 
-    
+    public function album_tracks($albumid)
+    {
+        $tracks = Album::with('tracks','tracks.artist.user','tracks.genre')->find($albumid);
+		return response()->json(['success'=>true,'message'=>'Album Detail','album_list'=>$tracks]);
+    }
 	
 	public function genres_list()
     {
