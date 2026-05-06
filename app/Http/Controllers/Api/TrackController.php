@@ -208,9 +208,10 @@ class TrackController extends BaseController
 	
 	public function events_list()
     {
-        $users = Event::with('artist')->get();
+        $users = Event::with('artist')->get()->unique('artist_id');
 		return response()->json(['success'=>true,'message'=>'Event List','event_list'=>$users]);
     }
+
 
     public function events_by_artist($artistid)
     {
