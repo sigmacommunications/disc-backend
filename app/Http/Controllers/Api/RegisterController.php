@@ -77,7 +77,7 @@ class RegisterController extends BaseController
             if($validator->fails()){
 				return $this->sendError($validator->errors()->first());
             }
-            $user = User::where('email',$request->email)->first();
+            $user = User::with('liked_artist')->where('email',$request->email)->first();
 			
             
             // if($user->email_verified_at != null)
