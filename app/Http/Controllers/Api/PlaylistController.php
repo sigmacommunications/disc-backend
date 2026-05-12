@@ -93,12 +93,21 @@ class PlaylistController extends BaseController
 		 return $this->sendError($validator->errors()->first());
 
         }
+
+        $photo = null;
+        if($request->hasFile('photo'))
+        {
+            $file = $request->file('photo');
+            $photo = $file->store('photos');
+        }
 		
 		$playlist = Playlist::find($request->input('playlist_id'));
 		if($playlist && $playlist->user_id == Auth::id())
 		{
 			$playlist->update([
 				'name' => $request->input('name'),
+                'photo' => $photo,
+                'description' => $request->input('description'),
 			]);
 			return response()->json(['success'=>true,'message'=>'Playlist updated successfully','playlist'=>$playlist]);
 		}
