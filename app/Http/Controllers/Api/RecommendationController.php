@@ -16,6 +16,120 @@ use Illuminate\Support\Facades\Cache;
 class RecommendationController extends Controller
 {
     
+	public function recommendedTracks(Request $request)
+	{
+		try {
+			$limit = $request->get('limit', 20);
+			$timeRange = $request->get('time_range', 'all');
+			$userId = auth()->id();
+
+			// Using Eloquent to get user's playlists
+			$userPlaylists = \App\Models\Playlist::where('user_id', $userId)->get();
+			$userPlaylistIds = $userPlaylists->pluck('id')->toArray();
+
+			// Get excluded track IDs using relationship
+			$excludedTrackIds = \App\Models\PlaylistTrack::whereIn('playlist_id', $userPlaylistIds)
+				->pluck('track_id')
+				->unique()
+				->toArray();
+
+			$tracksQuery = Track::with('artist.user')
+				->when(!empty($excludedTrackIds), function($query) use ($excludedTrackIds) {
+					return $query->whereNotIn('id', $excludedTrackIds);
+				});
+
+			// Time range filter
+			switch($timeRange) {
+				case 'day':
+					$tracksQuery->where('created_at', '>=', now()->subDay());
+					break;
+				case 'week':
+					$tracksQuery->where('created_at', '>=', now()->subWeek());
+					break;
+				case 'month':
+					$tracksQuery->where('created_at', '>=', now()->subMonth());
+					break;
+				case 'year':
+					$tracksQuery->where('created_at', '>=', now()->subYear());
+					break;
+			}
+
+			// Alternative: Direct subquery to exclude tracks
+			$tracksQuery->whereNotIn('id', function($query) use ($userId) {
+				$query->select('track_id')
+					->from('playlist_track')
+					->whereIn('playlist_id', function($q) use ($userId) {
+						$q->select('id')
+							->from('playlists')
+							->where('user_id', $userId);
+					});
+			});
+
+			// Calculate trending score
+			$tracks = $tracksQuery->get()->map(function($track) {
+				$trendingScore = ($track->plays_count * 0.6) + ($track->likes_count * 0.4);
+
+				if ($track->last_played_at && $track->last_played_at >= now()->subDay()) {
+					$trendingScore *= 1.2;
+				}
+				
+				$albumData = null;
+				if ($track->album) {
+					$albumData = [
+						'id' => $track->album->id,
+						'title' => $track->album->title,
+						'slug' => $track->album->slug ?? null,
+						'cover_image' => $track->album->cover_image_path ?? $track->album->cover_image ?? null,
+						'release_date' => $track->album->release_date ? $track->album->release_date->format('Y-m-d') : null,
+						'total_tracks' => $track->album->tracks()->count() ?? 0,
+					];
+				}
+
+				return [
+					'id' => $track->id,
+					'title' => $track->title,
+					'description' => $track->description,
+					'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
+					'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
+					'duration' => $track->duration,
+					'is_liked' => $track->likes()->where('user_id', auth()->id())->exists(),
+					'plays_count' => $track->plays_count,
+					'likes_count' => $track->likes_count,
+					'trending_score' => round($trendingScore, 2),
+					'last_played_at' => $track->last_played_at,
+					'created_at' => $track->created_at->format('Y-m-d H:i:s'),
+					'created_at_human' => $track->created_at->diffForHumans(),
+					'artist' => [
+						'id' => $track->artist->id,
+						'name' => $track->artist->user->name ?? 'Unknown Artist',
+						'profile_image' => $track->artist->user->profile_image ? $track->artist->user->profile_image : null,
+					],
+					'album' => $albumData
+				];
+			})->sortByDesc('trending_score')->take($limit)->values();
+
+			return response()->json([
+				'success' => true,
+				'message' => 'Trending tracks fetched successfully',
+				'data' => [
+					'time_range' => $timeRange,
+					'total' => $tracks->count(),
+					'debug_info' => [
+						'user_playlist_ids' => $userPlaylistIds,
+						'excluded_track_ids' => $excludedTrackIds,
+						'excluded_count' => count($excludedTrackIds)
+					],
+					'tracks' => $tracks
+				]
+			]);
+
+		} catch (\Exception $e) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Error fetching trending tracks: ' . $e->getMessage()
+			], 500);
+		}
+	}
 
     public function trending_tracks(Request $request)
 	{

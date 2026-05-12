@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Models\Genre;
 use App\Models\SongPlay;
+use App\Models\User;
 use App\Models\Artist;
 use App\Models\Event;
 use App\Models\Track;
@@ -33,6 +34,33 @@ class TrackController extends BaseController
         return redirect()->back()->with('success', 'Track details updated successfully.');
     }
 	
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        
+        if (!$query) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Query is required',
+            ], 400);
+        }
+        
+        $tracks = Track::with('artist.user')->where('title', 'like', "%{$query}%")->get();
+        
+        
+        $matchingUserIds = User::where('name', 'like', "%{$query}%")->pluck('id');
+
+        $artists = Artist::with('user')
+        ->whereIn('user_id', $matchingUserIds)
+        ->get();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Tracks found successfully',
+            'tracks' => $tracks,
+            'artists' => $artists,
+        ]);
+    }
 	
 	public function downloadTrack(Request $request, $trackId)
     {

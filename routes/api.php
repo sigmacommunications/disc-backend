@@ -26,6 +26,9 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function ()
 	Route::post('playlist/update', [\App\Http\Controllers\Api\PlaylistController::class, 'playlist_update']);
 	Route::post('playlist/delete', [\App\Http\Controllers\Api\PlaylistController::class, 'playlist_delete']);
 
+	Route::post('search', [\App\Http\Controllers\Api\TrackController::class, 'search']);
+
+
 
     Route::get('album/{album_id}', [\App\Http\Controllers\Api\TrackController::class, 'album_tracks']);
 
@@ -63,6 +66,7 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function ()
 		// Protected endpoints (require authentication)
 		Route::get('/best-artists', [RecommendationController::class, 'bestArtists']);
 		Route::get('/recommended-artict', [RecommendationController::class, 'recommendedForToday']);
+		Route::get('/recommended-tracks', [RecommendationController::class, 'recommendedTracks']);
 		Route::get('/recent-artists', [RecommendationController::class, 'recentArtists']);
 		//	Route::get('/dashboard', [RecommendationController::class, 'recommendationDashboard']);
 	});
