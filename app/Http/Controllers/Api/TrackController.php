@@ -209,8 +209,8 @@ class TrackController extends BaseController
 				'bio' => $artist->bio,
 				'statistics' => [
 					'total_tracks' => $tracks->count(),
-					'total_plays' => $tracks->sum('plays_count'),
-					'total_likes' => $tracks->sum('likes_count'),
+					//'total_plays' => $tracks->sum('plays_count'),
+					'total_followers' => $artist->likes->count(),
 				],
 				'all_tracks' => $formattedTracks->values(),
 				'latest_tracks' => $formattedTracks->sortByDesc('created_at')->take(3)->values(),
