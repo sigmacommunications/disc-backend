@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Playlist;
 use Auth;
+use App\Http\Resources\TrackResource;
+
 
 class PlaylistController extends BaseController
 {
