@@ -56,5 +56,15 @@ class Track extends Model
     }
     
     // Append the custom attribute to the model
-    protected $appends = ['is_liked'];
+    protected $appends = ['is_liked','audio_file','cover_image'];
+
+    public function getAudioFileAttribute()
+    {
+        return [$this->audio_file_path,$this->cover_image_path];
+    }
+
+    public function getCoverImageAttribute()
+    {
+        return $this->cover_image_path;
+    }
 }

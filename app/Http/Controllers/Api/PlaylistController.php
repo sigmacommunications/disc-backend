@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Playlist;
 use Auth;
-use App\Http\Resources\TrackResource;
+use App\Http\Resources\PlaylistResource;
 
 
 class PlaylistController extends BaseController
@@ -36,7 +36,9 @@ class PlaylistController extends BaseController
     public function index()
     {
         $playlists = Playlist::with('tracks')->where('user_id',Auth::id())->get();
-        return response()->json(['success'=>true,'message'=>'Playlist List','playlist'=>$playlists]);
+
+       return $data = PlaylistResource::collection($playlists);
+        return response()->json(['success'=>true,'message'=>'Playlist List','playlist'=>$data]);
     }
 
     public function playlist_store_track(Request $request)
