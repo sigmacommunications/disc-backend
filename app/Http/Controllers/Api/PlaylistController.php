@@ -37,7 +37,7 @@ class PlaylistController extends BaseController
     {
         $playlists = Playlist::with('tracks')->where('user_id',Auth::id())->get();
 
-       return $data = PlaylistResource::collection($playlists);
+        $data = PlaylistResource::collection($playlists);
         return response()->json(['success'=>true,'message'=>'Playlist List','playlist'=>$data]);
     }
 

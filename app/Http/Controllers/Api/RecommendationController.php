@@ -518,7 +518,7 @@ class RecommendationController extends Controller
 	{
 		$user = $request->user();
 		$limit = $request->get('limit', 20);
-		$weeks = $request->get('weeks', 60); // Default 1 week, can be 2, 3, 4 etc.
+		$weeks = $request->get('weeks', 100); // Default 1 week, can be 2, 3, 4 etc.
 
 		if (!$user) {
 			// For guests, return general trending content
