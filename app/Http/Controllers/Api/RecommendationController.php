@@ -753,7 +753,7 @@ class RecommendationController extends Controller
 
 		// 1. Global trending tracks (all time or last 30 days)
 		$globalTrending = Track::whereHas('plays', function($query) {
-				$query->where('played_at', '>=', now()->subDays(30));
+			//	$query->where('played_at', '>=', now()->subDays(30));
 			})
 			->with('artist.user')
 			->withCount(['plays as total_plays'])
@@ -819,12 +819,12 @@ class RecommendationController extends Controller
 					'items' => $recentTracks,
 				]
 			],
-			[
-				'featured_artists' => [
-					'title' => '⭐ Featured Artists',
-					'items' => $featuredArtists,
-				]
-			]
+			//[
+			//	'featured_artists' => [
+			//		'title' => '⭐ Featured Artists',
+			//		'items' => $featuredArtists,
+			//	]
+			//]
 		];
 
 		return response()->json([
