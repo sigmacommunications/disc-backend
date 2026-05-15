@@ -41,6 +41,12 @@ class PlaylistController extends BaseController
         return response()->json(['success'=>true,'message'=>'Playlist List','playlist'=>$data]);
     }
 
+    public function detail($id)
+    {
+        $playlist = Playlist::with('tracks')->find($id);
+        return response()->json(['success'=>true,'message'=>'Playlist Detail','playlist'=>$playlist]);
+    }
+
     public function playlist_store_track(Request $request)
     {
         $validator = Validator::make($request->all(), [
