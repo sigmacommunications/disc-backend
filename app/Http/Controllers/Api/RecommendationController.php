@@ -516,7 +516,7 @@ class RecommendationController extends Controller
 	 */
 	public function recommendedForToday(Request $request)
 	{
-		$user = $request->user();
+		$user = auth()->user();
 		$limit = $request->get('limit', 20);
 		$weeks = $request->get('weeks', 100); // Default 1 week, can be 2, 3, 4 etc.
 
