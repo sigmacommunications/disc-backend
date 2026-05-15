@@ -18,7 +18,8 @@ class RecommendationController extends Controller
     
 	public function recommendedTracks(Request $request)
 	{
-		try {
+		try 
+		{
 			$limit = $request->get('limit', 20);
 			$timeRange = $request->get('time_range', 'all');
 			$userId = auth()->id();
@@ -112,13 +113,8 @@ class RecommendationController extends Controller
 				'success' => true,
 				'message' => 'Trending tracks fetched successfully',
 				'data' => [
-					'time_range' => $timeRange,
+//					'time_range' => $timeRange,
 					'total' => $tracks->count(),
-					'debug_info' => [
-						'user_playlist_ids' => $userPlaylistIds,
-						'excluded_track_ids' => $excludedTrackIds,
-						'excluded_count' => count($excludedTrackIds)
-					],
 					'tracks' => $tracks
 				]
 			]);
@@ -420,6 +416,7 @@ class RecommendationController extends Controller
                         'id' => $topTrack->id,
                         'title' => $topTrack->title,
 						'is_liked' => $topTrack->likes()->where('user_id', auth()->user()->id)->exists(),
+                        'cover_image' => $topTrack->cover_image_path ? $topTrack->cover_image_path : null,
                         'audio_file' => $topTrack->audio_file_path ? $topTrack->audio_file_path : null,
                     ] : null,
                 ];
@@ -451,6 +448,7 @@ class RecommendationController extends Controller
                             'id' => $topTrack->id,
 							'is_liked' => $topTrack->likes()->where('user_id', auth()->user()->id)->exists(),
                             'title' => $topTrack->title,
+							'cover_image' => $topTrack->cover_image_path ? $topTrack->cover_image_path : null,
                             'audio_file' => $topTrack->audio_file_path ? $topTrack->audio_file_path : null,
                         ] : null,
                     ];
@@ -483,6 +481,7 @@ class RecommendationController extends Controller
                         'id' => $topTrack->id,
 						'is_liked' => $topTrack->likes()->where('user_id', auth()->user()->id)->exists(),
                         'title' => $topTrack->title,
+						'cover_image' => $topTrack->cover_image_path ? $topTrack->cover_image_path : null,
                         'audio_file' => $topTrack->audio_file_path ?  $topTrack->audio_file_path : null,
                     ] : null,
                 ];
@@ -519,7 +518,7 @@ class RecommendationController extends Controller
 	{
 		$user = $request->user();
 		$limit = $request->get('limit', 20);
-		$weeks = $request->get('weeks', 3); // Default 1 week, can be 2, 3, 4 etc.
+		$weeks = $request->get('weeks', 60); // Default 1 week, can be 2, 3, 4 etc.
 
 		if (!$user) {
 			// For guests, return general trending content
