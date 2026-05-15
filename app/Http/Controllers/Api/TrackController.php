@@ -7,10 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Models\Genre;
 use App\Models\SongPlay;
-use App\Models\User;
 use App\Models\Artist;
 use App\Models\Event;
 use App\Models\Track;
+use App\Models\User;
 use Auth;
 use Illuminate\Http\Request;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
@@ -19,6 +19,9 @@ use App\Http\Resources\AlbumResource;
 
 class TrackController extends BaseController
 {
+
+   
+
     public function admin_update(Request $request, Track $track)
     {
         $request->validate([
@@ -33,7 +36,7 @@ class TrackController extends BaseController
 
         return redirect()->back()->with('success', 'Track details updated successfully.');
     }
-	
+
     public function search(Request $request)
     {
         $query = $request->input('query');
@@ -61,6 +64,7 @@ class TrackController extends BaseController
             'artists' => $artists,
         ]);
     }
+	
 	
 	public function downloadTrack(Request $request, $trackId)
     {
@@ -134,6 +138,13 @@ class TrackController extends BaseController
 		return response()->json(['success'=>true,'message'=>'Track List','track_list'=>$tracks]);
     }
 	
+    public function track_details($trackId)
+    {
+        $tracks = Track::where('approved', true)->with('artist.user','album','genre')->findOrFail($trackId);
+		return response()->json(['success'=>true,'message'=>'Track List','track_list'=>$tracks]);
+    }
+
+    
 	public function trackPlay($trackId)
     {
         $track = Track::findOrFail($trackId);
@@ -239,7 +250,7 @@ class TrackController extends BaseController
         $users = Event::with('artist')->get()->unique('artist_id');
 		return response()->json(['success'=>true,'message'=>'Event List','event_list'=>$users]);
     }
-
+    
 
     public function events_by_artist($artistid)
     {

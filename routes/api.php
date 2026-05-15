@@ -19,18 +19,17 @@ Route::post('password/code/check', [\App\Http\Controllers\Api\ForgotPasswordCont
 Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function () {	
     Route::post('profile', [\App\Http\Controllers\Api\UserController::class, 'profile']);
     Route::get('track-list', [\App\Http\Controllers\Api\TrackController::class, 'track_list']);
+    Route::get('track-detail/{trackId}', [\App\Http\Controllers\Api\TrackController::class, 'track_details']);
+    Route::get('album/{album_id}', [\App\Http\Controllers\Api\TrackController::class, 'album_tracks']);
     Route::post('playlist/create', [\App\Http\Controllers\Api\PlaylistController::class, 'playlist_create']);
     Route::get('playlist/list', [\App\Http\Controllers\Api\PlaylistController::class, 'index']);
 	Route::post('playlist/add-track', [\App\Http\Controllers\Api\PlaylistController::class, 'playlist_store_track']);
 	Route::post('playlist/remove-track', [\App\Http\Controllers\Api\PlaylistController::class, 'playlist_remove_track']);
 	Route::post('playlist/update', [\App\Http\Controllers\Api\PlaylistController::class, 'playlist_update']);
 	Route::post('playlist/delete', [\App\Http\Controllers\Api\PlaylistController::class, 'playlist_delete']);
-
+	
 	Route::post('search', [\App\Http\Controllers\Api\TrackController::class, 'search']);
 
-
-
-    Route::get('album/{album_id}', [\App\Http\Controllers\Api\TrackController::class, 'album_tracks']);
 
 	
 	Route::get('/events-artist-id/{id}', [\App\Http\Controllers\Api\TrackController::class, 'events_by_artist']);
