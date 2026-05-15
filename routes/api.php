@@ -65,7 +65,7 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function ()
 
 		// Protected endpoints (require authentication)
 		Route::get('/best-artists', [RecommendationController::class, 'bestArtists']);
-		Route::get('/recommended-artict', [RecommendationController::class, 'recommendedForToday']);
+		Route::get('/recommended-artist', [RecommendationController::class, 'recommendedForToday']);
 		Route::get('/recommended-tracks', [RecommendationController::class, 'recommendedTracks']);
 		Route::get('/recent-artists', [RecommendationController::class, 'recentArtists']);
 		//	Route::get('/dashboard', [RecommendationController::class, 'recommendationDashboard']);
