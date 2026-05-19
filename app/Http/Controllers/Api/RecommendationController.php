@@ -24,17 +24,15 @@ class RecommendationController extends Controller
 			$timeRange = $request->get('time_range', 'all');
 			$userId = auth()->id();
 
-			// Using Eloquent to get user's playlists
-			$userPlaylists = \App\Models\Playlist::where('user_id', $userId)->get();
-			$userPlaylistIds = $userPlaylists->pluck('id')->toArray();
+			// Get excluded track IDs
+			$excludedTrackIds = \App\Models\PlaylistTrack::whereIn('playlist_id', function($query) use ($userId) {
+				$query->select('id')
+					->from('playlists')
+					->where('user_id', $userId);
+			})->pluck('track_id')->unique()->toArray();
 
-			// Get excluded track IDs using relationship
-			$excludedTrackIds = \App\Models\PlaylistTrack::whereIn('playlist_id', $userPlaylistIds)
-				->pluck('track_id')
-				->unique()
-				->toArray();
-
-			$tracksQuery = Track::with('artist.user')
+			// Build query
+			$tracksQuery = Track::with(['artist.user', 'album'])
 				->when(!empty($excludedTrackIds), function($query) use ($excludedTrackIds) {
 					return $query->whereNotIn('id', $excludedTrackIds);
 				});
@@ -55,74 +53,21 @@ class RecommendationController extends Controller
 					break;
 			}
 
-			// Alternative: Direct subquery to exclude tracks
-			$tracksQuery->whereNotIn('id', function($query) use ($userId) {
-				$query->select('track_id')
-					->from('playlist_track')
-					->whereIn('playlist_id', function($q) use ($userId) {
-						$q->select('id')
-							->from('playlists')
-							->where('user_id', $userId);
-					});
-			});
-
-			// Calculate trending score
-			$tracks = $tracksQuery->get()->map(function($track) {
-				$trendingScore = ($track->plays_count * 0.6) + ($track->likes_count * 0.4);
-
-				if ($track->last_played_at && $track->last_played_at >= now()->subDay()) {
-					$trendingScore *= 1.2;
-				}
-				
-				$albumData = null;
-				if ($track->album) {
-					$albumData = [
-						'id' => $track->album->id,
-						'title' => $track->album->title,
-						'slug' => $track->album->slug ?? null,
-						'cover_image' => $track->album->cover_image_path ?? $track->album->cover_image ?? null,
-						'release_date' => $track->album->release_date ? $track->album->release_date->format('Y-m-d') : null,
-						'total_tracks' => $track->album->tracks()->count() ?? 0,
-					];
-				}
-
-				return [
-					'id' => $track->id,
-					'title' => $track->title,
-					'description' => $track->description,
-					'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
-					'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
-					'duration' => $track->duration,
-					'is_liked' => $track->likes()->where('user_id', auth()->id())->exists(),
-					'plays_count' => $track->plays_count,
-					'likes_count' => $track->likes_count,
-					'trending_score' => round($trendingScore, 2),
-					'last_played_at' => $track->last_played_at,
-					'created_at' => $track->created_at->format('Y-m-d H:i:s'),
-					'created_at_human' => $track->created_at->diffForHumans(),
-					'artist' => [
-						'id' => $track->artist->id,
-						'name' => $track->artist->user->name ?? 'Unknown Artist',
-						'profile_image' => $track->artist->user->profile_image ? $track->artist->user->profile_image : null,
-					],
-					'album' => $albumData
-				];
-			})->sortByDesc('trending_score')->take($limit)->values();
+			$tracks = $tracksQuery->get();
 
 			return response()->json([
 				'success' => true,
-				'message' => 'Trending tracks fetched successfully',
+				'message' => 'Recommended tracks fetched successfully',
 				'data' => [
-//					'time_range' => $timeRange,
 					'total' => $tracks->count(),
-					'tracks' => $tracks
+					'tracks' => $tracks // Direct - saare columns automatic
 				]
 			]);
 
 		} catch (\Exception $e) {
 			return response()->json([
 				'success' => false,
-				'message' => 'Error fetching trending tracks: ' . $e->getMessage()
+				'message' => 'Error fetching recommended tracks: ' . $e->getMessage()
 			], 500);
 		}
 	}
@@ -131,9 +76,9 @@ class RecommendationController extends Controller
 	{
 		try {
 			$limit = $request->get('limit', 20);
-			$timeRange = $request->get('time_range', 'all'); // day, week, month, all
+			$timeRange = $request->get('time_range', 'all');
 
-			$tracksQuery = Track::with('artist.user');
+			$tracksQuery = Track::with(['artist.user', 'album']);
 
 			// Time range filter
 			switch($timeRange) {
@@ -151,48 +96,7 @@ class RecommendationController extends Controller
 					break;
 			}
 
-			// Calculate trending score (plays + likes with weights)
-			$tracks = $tracksQuery->get()->map(function($track) {
-				$trendingScore = ($track->plays_count * 0.6) + ($track->likes_count * 0.4);
-
-				// Recent activity boost (if played in last 24 hours)
-				if ($track->last_played_at && $track->last_played_at >= now()->subDay()) {
-					$trendingScore *= 1.2;
-				}
-			$albumData = null;
-            if ($track->album) {
-                $albumData = [
-                    'id' => $track->album->id,
-                    'title' => $track->album->title,
-                    'slug' => $track->album->slug ?? null,
-                    'cover_image' => $track->album->cover_image_path ?? $track->album->cover_image ?? null,
-                    'release_date' => $track->album->release_date ? $track->album->release_date->format('Y-m-d') : null,
-                    'total_tracks' => $track->album->tracks()->count() ?? 0,
-                ];
-            }
-
-				return [
-					'id' => $track->id,
-					'title' => $track->title,
-					'description' => $track->description,
-					'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-					'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
-					'duration' => $track->duration,
-					'is_liked' => $track->likes()->where('user_id', auth()->user()->id)->exists(),
-					'plays_count' => $track->plays_count,
-					'likes_count' => $track->likes_count,
-					'trending_score' => round($trendingScore, 2),
-					'last_played_at' => $track->last_played_at,
-					'created_at' => $track->created_at->format('Y-m-d H:i:s'),
-					'created_at_human' => $track->created_at->diffForHumans(),
-					'artist' => [
-						'id' => $track->artist->id,
-						'name' => $track->artist->user->name ?? 'Unknown Artist',
-						'profile_image' => $track->artist->user->profile_image ?  $track->artist->user->profile_image : null,
-					],
-					'album' => $albumData
-				];
-			})->sortByDesc('trending_score')->take($limit)->values();
+			$tracks = $tracksQuery->get();
 
 			return response()->json([
 				'success' => true,
@@ -200,7 +104,7 @@ class RecommendationController extends Controller
 				'data' => [
 					'time_range' => $timeRange,
 					'total' => $tracks->count(),
-					'tracks' => $tracks
+					'tracks' => $tracks // Direct - saare columns automatic
 				]
 			]);
 
@@ -215,70 +119,33 @@ class RecommendationController extends Controller
 	public function recently_played(Request $request)
 	{
 		try {
-			$userId = auth()->user()->id; // Optional: specific user ke liye
-			$limit = $request->get('limit', 20);
-
-			// Agar user ID di hai to uske recent plays, nahi to sabke recent
-			if ($userId) {
-				$recentPlays = SongPlay::with(['track.artist.user'])
-					->where('user_id', $userId)
-					->orderBy('played_at', 'desc')
-					->take($limit)
-					->get();
-			//} 
-			//else {
-			//	$recentPlays = SongPlay::with(['track.artist.user', 'user'])
-			//		->orderBy('played_at', 'desc')
-			//		->take($limit)
-			//		->get();
-			//}
-
-				$formattedPlays = $recentPlays->map(function($play) {
-					$track = $play->track;
-
-					return [
-						'play_id' => $play->id,
-						'played_at' => $play->played_at,
-						'played_at_human' => $play->played_at,
-						'track' => [
-							'id' => $track->id,
-							'title' => $track->title,
-							'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-							'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
-							'duration' => $track->duration,
-							'plays_count' => $track->plays_count,
-							'likes_count' => $track->likes_count,
-						],
-						'artist' => [
-							'id' => $track->artist->id,
-							'name' => $track->artist->user->name ?? 'Unknown Artist',
-							'profile_image' => $track->artist->user->profile_image ?  $track->artist->user->profile_image : null,
-						],
-						'user' => $play->user ? [
-							'id' => $play->user->id,
-							'name' => $play->user->name,
-						] : null
-					];
-				});
-
-				return response()->json([
-					'success' => true,
-					'message' => 'Recently played tracks fetched successfully',
-					'data' => [
-						'total' => $formattedPlays->count(),
-						'recently_played' => $formattedPlays
-					]
-				]);
-			}
-			else
-			{
+			$userId = auth()->id();
+			
+			if (!$userId) {
 				return response()->json([
 					'success' => true,
 					'message' => 'Recently played tracks fetched successfully',
 					'data' => null
 				]);
 			}
-
+			
+			$limit = $request->get('limit', 20);
+			
+			$recentPlays = SongPlay::with(['track.artist.user', 'user'])
+				->where('user_id', $userId)
+				->orderBy('played_at', 'desc')
+				->take($limit)
+				->get();
+			
+			return response()->json([
+				'success' => true,
+				'message' => 'Recently played tracks fetched successfully',
+				'data' => [
+					'total' => $recentPlays->count(),
+					'recently_played' => $recentPlays // Direct - saare columns automatic
+				]
+			]);
+			
 		} catch (\Exception $e) {
 			return response()->json([
 				'success' => false,
@@ -293,7 +160,7 @@ class RecommendationController extends Controller
 			$limit = $request->get('limit', 10);
 			$type = $request->get('type', 'all'); // all, featured, popular, rising
 
-			$artistsQuery = Artist::with('user', 'tracks');
+			$artistsQuery = Artist::with(['user', 'tracks.likes']);
 
 			// Filter by type
 			switch($type) {
@@ -302,73 +169,71 @@ class RecommendationController extends Controller
 					break;
 				case 'popular':
 					$artistsQuery->withCount('tracks')
-						->having('tracks_count', '>', 5)
-						->orderBy('total_plays', 'desc');
+						->having('tracks_count', '>', 5);
 					break;
 				case 'rising':
-					$artistsQuery->where('created_at', '>=', now()->subMonths(3))
-						->orderBy('created_at', 'desc');
+					$artistsQuery->where('created_at', '>=', now()->subMonths(3));
 					break;
 			}
 
-			$artists = $artistsQuery->get()->map(function($artist) {
+			$artists = $artistsQuery->get();
+			
+			// Add calculated fields to each artist
+			$formattedArtists = $artists->map(function($artist) {
+				// Calculate statistics
 				$tracks = $artist->tracks;
 				$totalPlays = $tracks->sum('plays_count');
 				$totalLikes = $tracks->sum('likes_count');
-
+				
+				// Add calculated fields to artist object
+				$artist->total_tracks_count = $tracks->count();
+				$artist->total_plays_sum = $totalPlays;
+				$artist->total_likes_sum = $totalLikes;
+				$artist->monthly_listeners = $artist->monthly_listeners ?? rand(1000, 100000);
+				
 				// Calculate popularity score
 				$popularityScore = ($totalPlays * 0.5) + ($totalLikes * 0.3) + ($tracks->count() * 10);
-
-				// Get top tracks
-				$topTracks = $tracks->sortByDesc('plays_count')->take(3)->map(function($track) {
-					return [
-						'id' => $track->id,
-						'title' => $track->title,
-						'is_liked' => $track->likes()->where('user_id', auth()->user()->id)->exists(),
-						'plays_count' => $track->plays_count,
-						'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
-						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-					];
-				})->values();
-
-				return [
-					'id' => $artist->id,
-					'artist_name' => $artist->user->name ?? 'Unknown Artist',
-					'bio' => $artist->bio,
-					'profile_image' => $artist->user->profile_image ? $artist->user->profile_image : null,
-					'cover_image' => $artist->user->cover_image ?  $artist->user->cover_image : null,
-					'is_featured' => $artist->is_featured ?? false,
-					'featured_order' => $artist->featured_order ?? 0,
-					'popularity_score' => round($popularityScore, 2),
-					'statistics' => [
-						'total_tracks' => $tracks->count(),
-						'total_plays' => $totalPlays,
-						'total_likes' => $totalLikes,
-						'monthly_listeners' => $artist->monthly_listeners ?? rand(1000, 100000), // Example
-					],
-					'top_tracks' => $topTracks,
-					'social_links' => [
-						'spotify' => $artist->spotify_url ?? null,
-						'youtube' => $artist->youtube_url ?? null,
-						'instagram' => $artist->instagram_url ?? null,
-					],
-					'created_at' => $artist->created_at->format('Y-m-d H:i:s'),
-					'created_at_human' => $artist->created_at->diffForHumans(),
-				];
-			})->sortByDesc(function($artist) use ($type) {
-				if ($type === 'featured') {
-					return $artist['featured_order'];
+				$artist->popularity_score = round($popularityScore, 2);
+				
+				// Add top tracks (only 3)
+				$artist->top_tracks = $artist->tracks
+					->sortByDesc('plays_count')
+					->take(3)
+					->values();
+				
+				// Flatten user data
+				if ($artist->user) {
+					$artist->artist_name = $artist->user->name ?? 'Unknown Artist';
+					$artist->profile_image = $artist->user->profile_image ?? null;
+					$artist->cover_image = $artist->user->cover_image ?? null;
 				}
-				return $artist['popularity_score'];
-			})->take($limit)->values();
+				
+				// Add created_at human
+				$artist->created_at_human = $artist->created_at->diffForHumans();
+				
+				// Remove relations to clean response
+				unset($artist->user);
+				unset($artist->tracks);
+				
+				return $artist;
+			});
+			
+			// Sort based on type
+			if ($type === 'featured') {
+				$formattedArtists = $formattedArtists->sortBy('featured_order');
+			} else {
+				$formattedArtists = $formattedArtists->sortByDesc('popularity_score');
+			}
+			
+			$formattedArtists = $formattedArtists->take($limit)->values();
 
 			return response()->json([
 				'success' => true,
 				'message' => 'Featuring artists fetched successfully',
 				'data' => [
 					'type' => $type,
-					'total' => $artists->count(),
-					'artists' => $artists
+					'total' => $formattedArtists->count(),
+					'artists' => $formattedArtists
 				]
 			]);
 

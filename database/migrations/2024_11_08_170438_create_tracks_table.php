@@ -21,6 +21,7 @@ return new class extends Migration {
             $table->string('cover_image_path')->nullable();
             $table->text('description')->nullable();
             $table->boolean('approved')->default(false);
+            $table->boolean('is_explicit')->default(false);
             $table->timestamps();
         });
     }
