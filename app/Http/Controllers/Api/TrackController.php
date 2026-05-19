@@ -435,6 +435,7 @@ class TrackController extends BaseController
         $track->genre_id = $request->genre_id;
         $track->duration = $request->duration;
         $track->album_id = $request->album_id;
+        $track->is_explicit = $request->is_explicit;
         $track->description = $request->description;
         $track->approved = false; // Re-approve after editing
         $track->save();
