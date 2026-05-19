@@ -93,6 +93,7 @@ class RecommendationController extends Controller
 					'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
 					'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
 					'duration' => $track->duration,
+					'is_explicit' => $track->is_explicit,
 					'is_liked' => $track->likes()->where('user_id', auth()->id())->exists(),
 					'plays_count' => $track->plays_count,
 					'likes_count' => $track->likes_count,
@@ -177,6 +178,7 @@ class RecommendationController extends Controller
 					'description' => $track->description,
 					'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
 					'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
+					'is_explicit' => $track->is_explicit,
 					'duration' => $track->duration,
 					'is_liked' => $track->likes()->where('user_id', auth()->user()->id)->exists(),
 					'plays_count' => $track->plays_count,
@@ -245,6 +247,7 @@ class RecommendationController extends Controller
 							'title' => $track->title,
 							'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
 							'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
+							'is_explicit' => $track->is_explicit,
 							'duration' => $track->duration,
 							'plays_count' => $track->plays_count,
 							'likes_count' => $track->likes_count,
@@ -327,6 +330,7 @@ class RecommendationController extends Controller
 						'is_liked' => $track->likes()->where('user_id', auth()->user()->id)->exists(),
 						'plays_count' => $track->plays_count,
 						'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
+						'is_explicit' => $track->is_explicit,
 						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
 					];
 				})->values();
@@ -415,6 +419,7 @@ class RecommendationController extends Controller
                     'top_track' => $topTrack ? [
                         'id' => $topTrack->id,
                         'title' => $topTrack->title,
+						'is_explicit' => $topTrack->is_explicit,
 						'is_liked' => $topTrack->likes()->where('user_id', auth()->user()->id)->exists(),
                         'cover_image' => $topTrack->cover_image_path ? $topTrack->cover_image_path : null,
                         'audio_file' => $topTrack->audio_file_path ? $topTrack->audio_file_path : null,
@@ -448,6 +453,7 @@ class RecommendationController extends Controller
                             'id' => $topTrack->id,
 							'is_liked' => $topTrack->likes()->where('user_id', auth()->user()->id)->exists(),
                             'title' => $topTrack->title,
+							'is_explicit' => $topTrack->is_explicit,
 							'cover_image' => $topTrack->cover_image_path ? $topTrack->cover_image_path : null,
                             'audio_file' => $topTrack->audio_file_path ? $topTrack->audio_file_path : null,
                         ] : null,
@@ -481,6 +487,7 @@ class RecommendationController extends Controller
                         'id' => $topTrack->id,
 						'is_liked' => $topTrack->likes()->where('user_id', auth()->user()->id)->exists(),
                         'title' => $topTrack->title,
+						'is_explicit' => $topTrack->is_explicit,
 						'cover_image' => $topTrack->cover_image_path ? $topTrack->cover_image_path : null,
                         'audio_file' => $topTrack->audio_file_path ?  $topTrack->audio_file_path : null,
                     ] : null,
@@ -617,6 +624,7 @@ class RecommendationController extends Controller
 						'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
 						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
 						'duration' => $track->duration,
+						'is_explicit' => $track->is_explicit,
 						'recent_plays' => $recentPlays,
 						'released_at' => $track->created_at->format('Y-m-d'),
 						'released_weeks_ago' => $track->created_at->diffInWeeks(now()),
@@ -650,6 +658,7 @@ class RecommendationController extends Controller
 					'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
 					'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
 					'weekly_plays' => $track->weekly_plays,
+					'is_explicit' => $track->is_explicit,
 					'reason' => 'Trending this week',
 				];
 			});
@@ -686,6 +695,7 @@ class RecommendationController extends Controller
 						'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
 						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
 						'duration' => $track->duration,
+						'is_explicit' => $track->is_explicit,
 						'reason' => 'Your top track this week',
 					];
 				});
@@ -753,7 +763,7 @@ class RecommendationController extends Controller
 
 		// 1. Global trending tracks (all time or last 30 days)
 		$globalTrending = Track::whereHas('plays', function($query) {
-			//	$query->where('played_at', '>=', now()->subDays(30));
+				$query->where('played_at', '>=', now()->subDays(30));
 			})
 			->with('artist.user')
 			->withCount(['plays as total_plays'])
@@ -770,6 +780,7 @@ class RecommendationController extends Controller
 					'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
 					'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
 					'duration' => $track->duration,
+					'is_explicit' => $track->is_explicit,
 					'reason' => 'Global trending track',
 				];
 			});
@@ -794,6 +805,7 @@ class RecommendationController extends Controller
 					'title' => $track->title,
 					'artist' => $track->artist->user->name ?? 'Unknown Artist',
 					'artist_id' => $track->artist_id,
+					'is_explicit' => $track->is_explicit,
 					'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
 					'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
 					'reason' => 'Fresh new track',
@@ -819,12 +831,12 @@ class RecommendationController extends Controller
 					'items' => $recentTracks,
 				]
 			],
-			//[
-			//	'featured_artists' => [
-			//		'title' => '⭐ Featured Artists',
-			//		'items' => $featuredArtists,
-			//	]
-			//]
+			[
+				'featured_artists' => [
+					'title' => '⭐ Featured Artists',
+					'items' => $featuredArtists,
+				]
+			]
 		];
 
 		return response()->json([
@@ -870,6 +882,7 @@ class RecommendationController extends Controller
 						'artist' => $artistName,
 						'is_liked' => $isLiked,
 						'artist_id' => $track->artist_id,
+						'is_explicit' => $track->is_explicit,
 						'cover_image' => $track->cover_image_path ?  $track->cover_image_path: null,
 						'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
 						'reason' => 'Similar to artists you like',
@@ -904,6 +917,7 @@ class RecommendationController extends Controller
 						'artist' => $artistName,
 						'is_liked' => $isLiked,
 						'artist_id' => $track->artist_id,
+						'is_explicit' => $track->is_explicit,
 						'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
 						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
 						'reason' => 'Popular in your favorite genres',
@@ -979,6 +993,7 @@ class RecommendationController extends Controller
 						'id' => $topTrack->id,
 						'title' => $topTrack->title,
 						'play_count' => $topTrack->play_count,
+						'is_explicit' => $topTrack->is_explicit,
 						'is_liked' =>$isLiked,
 						'cover_image' => $topTrack->cover_image_path ?  $topTrack->cover_image_path : null,
 						'audio_file' => $topTrack->audio_file_path, // YEH already hai
@@ -1063,6 +1078,7 @@ class RecommendationController extends Controller
                 'plays' => $track->play_count,
                 'cover_image' => $track->cover_image_path ? $track->cover_image_path : null, // track ki apni image
                 'duration' => $track->duration,
+				'is_explicit' => $track->is_explicit,
                 'audio_file' => $track->audio_file_path,
                 'is_liked' => $isLiked,
                 'created_at' => $track->created_at,
@@ -1186,6 +1202,7 @@ class RecommendationController extends Controller
                         'cover_image' => $track->cover_image ?  $track->cover_image : null,
                         'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
                         'duration' => $track->duration,
+						'is_explicit' => $track->is_explicit,
                         'reason' => 'Trending now',
                     ];
                 });
@@ -1207,6 +1224,7 @@ class RecommendationController extends Controller
                     'cover_image' => $track->cover_image ? $track->cover_image : null,
                     'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
                     'duration' => $track->duration,
+					'is_explicit' => $track->is_explicit,
                     'play_count' => $track->play_count,
                     'reason' => 'Because you listened to ' . $track->artist->name,
                 ];
