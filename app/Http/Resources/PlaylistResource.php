@@ -12,7 +12,7 @@ class PlaylistResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'cover_image' => $this->cover_image ?? null,
+            'photo' => $this->photo ?? null,
             'user_id' => $this->user_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
