@@ -108,7 +108,7 @@ class PlaylistController extends BaseController
         if($request->hasFile('photo'))
         {
             $file = $request->file('photo');
-            $photo = $file->store('photos');
+            $photo = $file->store('playlist', 'public');
         }
 		
 		$playlist = Playlist::find($request->input('playlist_id'));
