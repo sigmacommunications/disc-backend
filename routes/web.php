@@ -35,6 +35,9 @@ require __DIR__ . '/auth.php';
 
 Route::any('/stripe/webhook', [PaymentController::class, 'handleStripeWebhook']);
 
+
+
+
 Route::get('/', [FrontendController::class, 'home'])->name('home');
 Route::get('/start-selling', [FrontendController::class, 'startSelling'])->name('start-selling')->middleware('check_subscription');
 Route::get('/explore', [FrontendController::class, 'explore'])->name('explore');

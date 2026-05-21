@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Album;
 use App\Models\Genre;
 use App\Models\SongPlay;
+use App\Models\LikedArtist;
+use App\Models\User;
 use App\Models\Track;
 use Auth;
 use Illuminate\Http\Request;
 use ProtoneMedia\LaravelFFMpeg\Support\FFMpeg;
 use Storage;
+use App\Events\NewTrackAdded;
+use App\Models\Notification;
 
 class TrackController extends Controller
 {
@@ -117,11 +121,6 @@ class TrackController extends Controller
 
     public function store(Request $request)
     {
-        // Permission check (redundant if using middleware)
-        // if (!auth()->user()->can('upload tracks')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
-// dd($request->all());
         $request->validate([
             'title' => 'required|string|max:255',
             'genre_id' => 'required|exists:genres,id',
@@ -162,6 +161,26 @@ class TrackController extends Controller
             'royalty_amount' => $request->royalty_amount,
             'approved' => false,
         ]);
+
+        
+
+        $artistLikes = LikedArtist::where('artist_id', Auth::id())->get();
+        
+        // Send notification to each user
+        foreach($artistLikes as $like) {
+            $user = User::find($like->user_id);
+            event(new NewTrackAdded($user->id, auth()->user()->name, $request->title,'Track'));
+            // Store in database (optional - for history)
+            Notification::create([
+                'user_id' => $user->id,
+                'artist_id' => Auth::id(),
+                'track_id' => $track->id,
+                'message' => Auth::user()->name . ' added new track: ' . $request->name,
+                'is_read' => false,
+                'type' => 'new_track'
+            ]);
+        }
+
 
         return redirect()->route('artist.tracks.index', $track->id)->with('success', 'Track uploaded successfully and is pending approval.');
     }
