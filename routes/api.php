@@ -2,6 +2,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RecommendationController;
+use App\Http\Controllers\Api\NotificationController;
 
 
 
@@ -17,6 +18,24 @@ Route::post('password/code/check', [\App\Http\Controllers\Api\ForgotPasswordCont
 
 
 Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function () {	
+
+
+	Route::get('/notifications', [NotificationController::class, 'index']);
+    // Get latest notifications for dropdown
+    Route::get('/notifications/latest', [NotificationController::class, 'latest']);
+    
+    // Get unread count only
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    
+    // Mark single notification as read
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    
+    // Mark all notifications as read
+    Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    
+    // Delete notification
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+
     Route::post('profile', [\App\Http\Controllers\Api\UserController::class, 'profile']);
     Route::get('track-list', [\App\Http\Controllers\Api\TrackController::class, 'track_list']);
     Route::get('track-detail/{trackId}', [\App\Http\Controllers\Api\TrackController::class, 'track_details']);
