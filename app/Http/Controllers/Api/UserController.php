@@ -158,7 +158,7 @@ class UserController extends BaseController
 			if($request->hasFile('profile_image'))
             {
                 $image = $request->file('profile_image');
-                $randomName = Str::random(40) . '.' . $image->getClientOriginalExtension();
+                $randomName = \Str::random(40) . '.' . $image->getClientOriginalExtension();
                 $path = $image->storeAs('users/profile_images', $randomName, 'public');            
                 $olduser->profile_image = $path;	
             }
