@@ -70,4 +70,62 @@ class NotificationController extends Controller
             ], 500);
         }
     }
+
+    public function markAsRead($id)
+    {
+        try {
+            $notification = Notification::where('user_id', Auth::id())
+                ->where('id', $id)
+                ->first();
+            
+            if (!$notification) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Notification not found'
+                ], 404);
+            }
+            
+            $notification->update(['is_read' => true]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification marked as read'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark as read'
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $notification = Notification::where('user_id', Auth::id())
+                ->where('id', $id)
+                ->first();
+            
+            if (!$notification) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Notification not found'
+                ], 404);
+            }
+            
+            $notification->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification deleted'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete notification'
+            ], 500);
+        }
+    }
 }

@@ -21,17 +21,8 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function ()
 
 
 	Route::get('/notifications', [NotificationController::class, 'index']);
-    // Get latest notifications for dropdown
-    Route::get('/notifications/latest', [NotificationController::class, 'latest']);
-    
-    // Get unread count only
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    
     // Mark single notification as read
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    
-    // Mark all notifications as read
-    Route::put('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
     
     // Delete notification
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
