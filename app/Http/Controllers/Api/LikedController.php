@@ -171,7 +171,11 @@ class LikedController extends Controller
             ->where('artist_id', $request->artist_id)
             ->delete();
 
-        return response()->json(['message' => 'Artist unliked successfully'], 200);
+        $user = User::with(['liked_artist','subscriptions' => function($query) {
+				$query->where('stripe_status', 'active');
+			}])->find($userId);
+
+        return response()->json(['message' => 'Artist unliked successfully','user_info'=>$user], 200);
     }
 	
 	public function event_like_destroy(Request $request)
@@ -190,12 +194,8 @@ class LikedController extends Controller
         LikedEvent::where('user_id', $userId)
             ->where('event_id', $request->event_id)
             ->delete();
-        
-        $user = User::with(['liked_artist','subscriptions' => function($query) {
-				$query->where('stripe_status', 'active');
-			}])->find($userId);
 
-        return response()->json(['message' => 'Event unliked successfully','user_info'=>$user], 200);
+        return response()->json(['message' => 'Event unliked successfully'], 200);
     }
 	
 	public function track_like_destroy(Request $request)
