@@ -8,6 +8,7 @@ use App\Models\LikedArtist;
 use App\Models\LikedEvent;
 use App\Models\Artist;
 use App\Models\Event;
+use App\Models\User;
 use App\Models\Track;
 use App\Models\LikedSong;
 use Validator;
@@ -189,8 +190,12 @@ class LikedController extends Controller
         LikedEvent::where('user_id', $userId)
             ->where('event_id', $request->event_id)
             ->delete();
+        
+        $user = User::with(['liked_artist','subscriptions' => function($query) {
+				$query->where('stripe_status', 'active');
+			}])->find($userId);
 
-        return response()->json(['message' => 'Event unliked successfully'], 200);
+        return response()->json(['message' => 'Event unliked successfully','user_info'=>$user], 200);
     }
 	
 	public function track_like_destroy(Request $request)
