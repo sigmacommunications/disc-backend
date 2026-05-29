@@ -740,12 +740,12 @@ class RecommendationController extends Controller
 			],
 		];
 			
-		$recommendations[] = [
-			'similar_artists' => [
-				'title' => 'Because You Listened To',
-				'items' => $similarToFavorites->unique('id')->take($limit)->values(),
-			],
-		];
+		// $recommendations[] = [
+		// 	'similar_artists' => [
+		// 		'title' => 'Because You Listened To',
+		// 		'items' => $similarToFavorites->unique('id')->take($limit)->values(),
+		// 	],
+		// ];
 			
 
 		return response()->json([
