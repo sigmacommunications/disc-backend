@@ -186,53 +186,14 @@ class TrackController extends BaseController
 	public function artist_list(Request $request)
 	{
 		$perPage = $request->get('per_page', 10);
-		$artists = Artist::with('user', 'tracks')
+		$artists = Artist::withCount('tracks','likes')->with('user', 'tracks','tracks.genre')
 			->paginate($perPage);
-
-		$formattedArtists = collect($artists->items())->map(function($artist) {
-			$tracks = $artist->tracks;
-
-			// Format tracks
-			$formattedTracks = $tracks->map(function($track) {
-				$isLiked = $track->likes()->where('user_id', auth()->user()->id)->exists();
-				return [
-					'id' => $track->id,
-					'title' => $track->title,
-					'description' => $track->description,
-					'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-					'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
-					'duration' => $track->duration,
-					'plays_count' => $track->plays_count,
-					'likes_count' => $track->likes_count,
-					'is_liked' => $isLiked,
-					'created_at' => $track->created_at->format('Y-m-d H:i:s'),
-					'created_at_human' => $track->created_at->diffForHumans(),
-					'genre' => $track->genre,
-					'featured' => $track->featured ?? false,
-				];
-			});
-
-			return [
-				'id' => $artist->id,
-				'artist_name' => $artist->user->name,
-				'profile_image' => $artist->user->profile_image ? $artist->user->profile_image : null,
-				//'cover_image' => $artist->user->cover_image ? $artist->user->cover_image : null,
-				'bio' => $artist->bio,
-				'statistics' => [
-					'total_tracks' => $tracks->count(),
-					//'total_plays' => $tracks->sum('plays_count'),
-					'total_followers' => $artist->likes->count(),
-				],
-				'all_tracks' => $formattedTracks->values(),
-				'latest_tracks' => $formattedTracks->sortByDesc('created_at')->take(3)->values(),
-			];
-		});
 
 		return response()->json([
 			'success' => true,
 			'message' => 'Artist List',
 			'data' => [
-				'artists' => $formattedArtists,
+				'artists' => $artists,
 				'pagination' => [
 					'current_page' => $artists->currentPage(),
 					'last_page' => $artists->lastPage(),

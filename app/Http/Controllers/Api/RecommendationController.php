@@ -173,28 +173,6 @@ class RecommendationController extends Controller
             }
 
 			return $track;
-				// return [
-				// 	'id' => $track->id,
-				// 	'title' => $track->title,
-				// 	'description' => $track->description,
-				// 	'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-				// 	'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
-				// 	'is_explicit' => $track->is_explicit,
-				// 	'duration' => $track->duration,
-				// 	'is_liked' => $track->likes()->where('user_id', auth()->user()->id)->exists(),
-				// 	'plays_count' => $track->plays_count,
-				// 	'likes_count' => $track->likes_count,
-				// 	'trending_score' => round($trendingScore, 2),
-				// 	'last_played_at' => $track->last_played_at,
-				// 	'created_at' => $track->created_at->format('Y-m-d H:i:s'),
-				// 	'created_at_human' => $track->created_at->diffForHumans(),
-				// 	'artist' => [
-				// 		'id' => $track->artist->id,
-				// 		'name' => $track->artist->user->name ?? 'Unknown Artist',
-				// 		'profile_image' => $track->artist->user->profile_image ?  $track->artist->user->profile_image : null,
-				// 	],
-				// 	'album' => $albumData
-				// ];
 			})->sortByDesc('trending_score')->take($limit)->values();
 
 			return response()->json([
