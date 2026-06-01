@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('tracks', function (Blueprint $table) {
             $table->id();
+            $table->string('track_no')->unique();
             $table->foreignId('album_id')->constrained()->onDelete('cascade');
             $table->foreignId('artist_id')->constrained()->onDelete('cascade');
             $table->string('title');

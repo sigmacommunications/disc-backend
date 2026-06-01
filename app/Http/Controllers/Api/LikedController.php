@@ -100,11 +100,11 @@ class LikedController extends Controller
 			LikedArtist::insert($likedArtistsData);
 		}
 
-		return response()->json([
-			'message' => count($newArtistIds) . ' artist(s) liked successfully',
-			'liked_artists' => $newArtistIds,
-			'already_liked' => $existingLikes
-		], 201);
+        $user = User::with(['liked_artist','subscriptions' => function($query) {
+				$query->where('stripe_status', 'active');
+			}])->find($userId);
+
+		return response()->json(['message' => 'Artist unliked successfully','user_info'=>$user], 200);
 	}
 	
 	public function event_like_store(Request $request)

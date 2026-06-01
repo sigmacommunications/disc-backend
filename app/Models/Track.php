@@ -4,10 +4,26 @@ namespace App\Models;
 
 use Auth;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Track extends Model
 {
     protected $guarded = [];
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($track) {
+            do {
+                $randomDigits = Str::random(10);
+                // Ensure it's only digits
+                $randomDigits = preg_replace('/[^0-9]/', '', $randomDigits);
+                // Pad with zeros if needed to make exactly 10 digits
+                $randomDigits = str_pad(substr($randomDigits, 0, 10), 10, '0', STR_PAD_RIGHT);
+                $track->track_no = 'DM-' . $randomDigits;
+            } while (self::where('track_no', $track->track_no)->exists());
+        });
+    }
     public function album()
     {
         return $this->belongsTo(Album::class);
