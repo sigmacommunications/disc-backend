@@ -998,98 +998,74 @@ class RecommendationController extends Controller
      * 5. BEST ARTISTS - Top artists overall (all-time, yearly, monthly, weekly)
      */
     public function bestArtists(Request $request)
-{
-    $period = $request->get('period', 'all'); // all, year, month, week
-    $limit = $request->get('limit', 20);
-    $trackLimit = $request->get('track_limit', 5); // kitne top tracks chahiye
-    
-    $query = Artist::query()->with('user'); // user relation load karo
-    
-    if ($period === 'week') {
-        $startDate = now()->subWeek();
-        $query->withCount(['tracks as period_plays' => function($q) use ($startDate) {
-            $q->join('song_plays', 'tracks.id', '=', 'song_plays.track_id')
-              ->where('song_plays.played_at', '>=', $startDate);
-        }])->orderBy('period_plays', 'desc');
-        
-    } elseif ($period === 'month') {
-        $startDate = now()->subMonth();
-        $query->withCount(['tracks as period_plays' => function($q) use ($startDate) {
-            $q->join('song_plays', 'tracks.id', '=', 'song_plays.track_id')
-              ->where('song_plays.played_at', '>=', $startDate);
-        }])->orderBy('period_plays', 'desc');
-        
-    } elseif ($period === 'year') {
-        $startDate = now()->subYear();
-        $query->withCount(['tracks as period_plays' => function($q) use ($startDate) {
-            $q->join('song_plays', 'tracks.id', '=', 'song_plays.track_id')
-              ->where('song_plays.played_at', '>=', $startDate);
-        }])->orderBy('period_plays', 'desc');
-        
-    } else {
-        // All-time - based on total play_count from tracks table
-        $query->withSum('tracks', 'play_count')
-              ->orderBy('tracks_sum_play_count', 'desc');
-    }
-    
-    // Eager load tracks for N+1 prevention
-    $query->with(['tracks' => function($q) use ($trackLimit) {
-        $q->orderBy('play_count', 'desc')->limit($trackLimit);
-    }]);
-    
-    $artists = $query->limit($limit)->get()->map(function($artist) use ($period, $trackLimit) {
-        $totalPlays = $period !== 'all' 
-            ? ($artist->period_plays ?? 0)
-            : ($artist->tracks_sum_play_count ?? 0);
-        
-        // Get unique listeners count
-        $uniqueListeners = SongPlay::whereIn('track_id', $artist->tracks->pluck('id'))
-            ->distinct('user_id')
-            ->count('user_id');
-        
+	{
+		$period = $request->get('period', 'all'); // all, year, month, week
+		$limit = $request->get('limit', 20);
+		$trackLimit = $request->get('track_limit', 5); // kitne top tracks chahiye
 		
-        // Get top tracks (already eager loaded)
-        $topTracks = $artist->tracks->map(function($track) {
-			$isLiked = $track->likes()->where('user_id', auth()->user()->id)->exists();
-            return [
-                'id' => $track->id,
-                'title' => $track->title,
-                'plays' => $track->play_count,
-                'cover_image' => $track->cover_image_path ? $track->cover_image_path : null, // track ki apni image
-                'duration' => $track->duration,
-				'is_explicit' => $track->is_explicit,
-                'audio_file' => $track->audio_file_path,
-                'is_liked' => $isLiked,
-                'created_at' => $track->created_at,
-            ];
-        });
-        
-        return [
-            'id' => $artist->id,
-            'name' => $artist->user->name,
-            // Images user table se aa rahi hain
-            'profile_image' => $artist->user && $artist->user->profile_image 
-                ? $artist->user->profile_image 
-                : ($artist->profile_image ? $artist->profile_image : null), // fallback
-            //'cover_image' => $artist->user && $artist->user->cover_image 
-            //    ? $artist->user->cover_image 
-            //    : ($artist->cover_image ? $artist->cover_image : null), // fallback
-            'bio' => $artist->bio,
-            'total_plays' => $totalPlays,
-            'unique_listeners' => $uniqueListeners,
-            'total_tracks' => $artist->tracks()->count(),
-            'tracks' => $topTracks,
-            'rank' => $artist->rank ?? null,
-        ];
-    });
-    
-    return response()->json([
-        'success' => true,
-        'message' => "Best Artists - {$period}",
-        'period' => $period,
-        'data' => $artists
-    ]);
-}
+		$query = Artist::query()->withCount('likes')->with('user'); // user relation load karo
+		
+		if ($period === 'week') {
+			$startDate = now()->subWeek();
+			$query->withCount(['tracks as period_plays' => function($q) use ($startDate) {
+				$q->join('song_plays', 'tracks.id', '=', 'song_plays.track_id')
+				->where('song_plays.played_at', '>=', $startDate);
+			}])->orderBy('period_plays', 'desc');
+			
+		} elseif ($period === 'month') {
+			$startDate = now()->subMonth();
+			$query->withCount(['tracks as period_plays' => function($q) use ($startDate) {
+				$q->join('song_plays', 'tracks.id', '=', 'song_plays.track_id')
+				->where('song_plays.played_at', '>=', $startDate);
+			}])->orderBy('period_plays', 'desc');
+			
+		} elseif ($period === 'year') {
+			$startDate = now()->subYear();
+			$query->withCount(['tracks as period_plays' => function($q) use ($startDate) {
+				$q->join('song_plays', 'tracks.id', '=', 'song_plays.track_id')
+				->where('song_plays.played_at', '>=', $startDate);
+			}])->orderBy('period_plays', 'desc');
+			
+		} else {
+			// All-time - based on total play_count from tracks table
+			$query->withSum('tracks', 'play_count')
+				->orderBy('tracks_sum_play_count', 'desc');
+		}
+		
+		// Eager load tracks for N+1 prevention
+		$query->with(['tracks' => function($q) use ($trackLimit) {
+			$q->orderBy('play_count', 'desc')->limit($trackLimit)->withCount('likes');
+		}]);
+		
+		
+		$artists = $query->limit($limit)->get()->map(function($artist) use ($period, $trackLimit) {
+			$totalPlays = $period !== 'all' 
+				? ($artist->period_plays ?? 0)
+				: ($artist->tracks_sum_play_count ?? 0);
+			
+			// Get unique listeners count
+			$uniqueListeners = SongPlay::whereIn('track_id', $artist->tracks->pluck('id'))
+				->distinct('user_id')
+				->count('user_id');
+			
+			
+			// Get top tracks (already eager loaded)
+			$topTracks = $artist->tracks->map(function($track) {
+				$isLiked = $track->likes()->where('user_id', auth()->user()->id)->exists();
+				return  $track->is_liked = $isLiked;
+
+			});
+			
+			return $artist;
+		});
+		
+		return response()->json([
+			'success' => true,
+			'message' => "Best Artists - {$period}",
+			'period' => $period,
+			'data' => $artists
+		]);
+	}
     
     /**
      * 6. TRENDING ARTISTS - Fastest growing artists right now
