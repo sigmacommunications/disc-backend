@@ -171,11 +171,43 @@ class TrackController extends BaseController
     }
 	
 	public function genres_detail($id)
-	{
-	    $tracksids = Track::where('genre_id', $id)->with('album')->pluck('album_id');
-		$album = Album::with('tracks.artist')->whereIn('id',$tracksids)->get();
-		return response()->json(['success'=>true,'message'=>'Genres List','track_list'=>AlbumResource::collection($album)]);
-	}
+    {
+        try {
+            $albums = Album::whereHas('tracks', function($q) use ($id) {
+                $q->where('genre_id', $id);
+            })
+            ->with(['tracks' => function($q) use ($id) {
+                $q->where('genre_id', $id)
+                ->with(['artist.user', 'genre'])
+                ->withCount('likes'); // ✅ Har track ke likes count ke liye
+            }])
+            ->withCount([
+                'tracks as total_tracks', // Sirf tracks count
+            ])
+            ->get();
+            
+            // Manually calculate total likes for each album
+            foreach($albums as $album) {
+                $album->total_likes = $album->tracks->sum('likes_count');
+                $album->total_plays = $album->tracks->sum('plays_count');
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Genre details fetched successfully',
+                'data' => [
+                    'genre_id' => $id,
+                    'albums' => $albums
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 	
     public function getTrack($trackId)
     {
