@@ -140,7 +140,7 @@ class TrackController extends BaseController
 	
     public function track_details($trackId)
     {
-        $tracks = Track::with('artist.user','album','genre')->where('approved', true)->wehere('track_no',$trackId)->first();
+        $tracks = Track::with('artist.user','album','genre')->where('approved', true)->where('track_no',$trackId)->first();
 		return response()->json(['success'=>true,'message'=>'Track List','track_list'=>$tracks]);
     }
 
