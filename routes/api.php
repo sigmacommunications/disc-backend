@@ -22,7 +22,7 @@ Route::group(['middleware' => ['auth:sanctum'], 'prefix' => 'auth'], function ()
 
 	Route::get('/notifications', [NotificationController::class, 'index']);
     // Mark single notification as read
-    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     
     // Delete notification
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
