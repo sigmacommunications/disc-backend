@@ -592,23 +592,24 @@ class RecommendationController extends Controller
 					$artistName = $track->artist->user->name ?? 'Unknown Artist';
 					$genreName = $genreNames[$track->genre_id] ?? 'Unknown Genre';
 					$isLiked = $track->likes()->where('user_id', auth()->user()->id)->exists();
-					return [
-						'type' => 'track',
-						'id' => $track->id,
-						'title' => $track->title,
-						'artist' => $artistName,
-						'artist_id' => $track->artist_id,
-						'genre' => $genreName,
-						'is_liked' => $isLiked,
-						'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
-						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-						'duration' => $track->duration,
-						'is_explicit' => $track->is_explicit,
-						'recent_plays' => $recentPlays,
-						'released_at' => $track->created_at->format('Y-m-d'),
-						'released_weeks_ago' => $track->created_at->diffInWeeks(now()),
-						'reason' => 'New release from genre you like',
-					];
+					return $track;
+					// return [
+					// 	'type' => 'track',
+					// 	'id' => $track->id,
+					// 	'title' => $track->title,
+					// 	'artist' => $artistName,
+					// 	'artist_id' => $track->artist_id,
+					// 	'genre' => $genreName,
+					// 	'is_liked' => $isLiked,
+					// 	'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
+					// 	'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
+					// 	'duration' => $track->duration,
+					// 	'is_explicit' => $track->is_explicit,
+					// 	'recent_plays' => $recentPlays,
+					// 	'released_at' => $track->created_at->format('Y-m-d'),
+					// 	'released_weeks_ago' => $track->created_at->diffInWeeks(now()),
+					// 	'reason' => 'New release from genre you like',
+					// ];
 				});
 		}
 
@@ -627,19 +628,20 @@ class RecommendationController extends Controller
 				$artistName = $track->artist->user->name ?? 'Unknown Artist';
 				$isLiked = $track->likes()->where('user_id', auth()->user()->id)->exists();
 
-				return [
-					'type' => 'track',
-					'id' => $track->id,
-					'title' => $track->title,
-					'artist' => $artistName,
-					'is_liked' => $isLiked,
-					'artist_id' => $track->artist_id,
-					'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
-					'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
-					'weekly_plays' => $track->weekly_plays,
-					'is_explicit' => $track->is_explicit,
-					'reason' => 'Trending this week',
-				];
+				return $track;
+				// return [
+				// 	'type' => 'track',
+				// 	'id' => $track->id,
+				// 	'title' => $track->title,
+				// 	'artist' => $artistName,
+				// 	'is_liked' => $isLiked,
+				// 	'artist_id' => $track->artist_id,
+				// 	'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
+				// 	'audio_file' => $track->audio_file_path ? $track->audio_file_path : null,
+				// 	'weekly_plays' => $track->weekly_plays,
+				// 	'is_explicit' => $track->is_explicit,
+				// 	'reason' => 'Trending this week',
+				// ];
 			});
 
 		// 4. This Week's Discovery Mix (based on listening patterns)
@@ -664,19 +666,20 @@ class RecommendationController extends Controller
 					$artistName = $track->artist->user->name ?? 'Unknown Artist';
 					$isLiked = $track->likes()->where('user_id', auth()->user()->id)->exists();
 
-					return [
-						'type' => 'track',
-						'id' => $track->id,
-						'title' => $track->title,
-						'artist' => $artistName,
-						'is_liked' => $isLiked,
-						'artist_id' => $track->artist_id,
-						'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
-						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-						'duration' => $track->duration,
-						'is_explicit' => $track->is_explicit,
-						'reason' => 'Your top track this week',
-					];
+					return $track;
+					// return [
+					// 	'type' => 'track',
+					// 	'id' => $track->id,
+					// 	'title' => $track->title,
+					// 	'artist' => $artistName,
+					// 	'is_liked' => $isLiked,
+					// 	'artist_id' => $track->artist_id,
+					// 	'cover_image' => $track->cover_image_path ? $track->cover_image_path : null,
+					// 	'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
+					// 	'duration' => $track->duration,
+					// 	'is_explicit' => $track->is_explicit,
+					// 	'reason' => 'Your top track this week',
+					// ];
 				});
 		}
 

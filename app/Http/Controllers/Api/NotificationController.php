@@ -15,7 +15,7 @@ class NotificationController extends Controller
             $user = Auth::user();
             
             $query = Notification::where('user_id', $user->id)
-                ->with(['artist', 'track'])
+                ->with(['artist','artist.artist', 'track'])
                 ->orderBy('created_at', 'desc');
             
             // Filter by read/unread
