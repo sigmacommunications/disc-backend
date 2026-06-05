@@ -30,6 +30,24 @@ class FrontendController extends Controller
         return view('frontend.spotify.main_screen', compact('artists', 'albums', 'tracks'));
     }
 
+    public function showTrackDetail($id)
+    {
+        $track = Track::with(['artist.user', 'album', 'genre', 'tags'])
+            ->withCount(['plays', 'likes'])
+            ->where('approved', true)
+            ->findOrFail($id);
+
+        $relatedTracks = Track::with('artist.user')
+            ->where('approved', true)
+            ->where('album_id', $track->album_id)
+            ->where('id', '!=', $track->id)
+            ->orderBy('id')
+            ->take(6)
+            ->get();
+
+        return view('frontend.track-detail', compact('track', 'relatedTracks'));
+    }
+    
     // Explore page
     public function explore(Request $request)
     {

@@ -60,6 +60,7 @@ Route::get('/artists-list', [FrontendController::class, 'artist'])->name('artist
 Route::get('/artist/details/{id}', [FrontendController::class, 'showArtistDetail'])->name('artists.details');
 
 Route::get('/subscription', [PaymentController::class, 'index'])->name('subscription.index');
+Route::get('/track/details/{id}', [FrontendController::class, 'showTrackDetail'])->name('tracks.details');
 
 Route::get('login/{provider}', [SocialController::class, 'redirectToProvider'])->name('social.login');
 Route::get('login/{provider}/callback', [SocialController::class, 'handleProviderCallback']);
