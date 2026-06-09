@@ -330,7 +330,7 @@ class RecommendationController extends Controller
 						'total_likes' => $totalLikes,
 						'monthly_listeners' => $artist->monthly_listeners ?? rand(1000, 100000), // Example
 					],
-					'top_tracks' => $topTracks,
+					'tracks' => $topTracks,
 					'social_links' => [
 						'spotify' => $artist->spotify_url ?? null,
 						'youtube' => $artist->youtube_url ?? null,
