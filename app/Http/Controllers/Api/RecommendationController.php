@@ -303,15 +303,16 @@ class RecommendationController extends Controller
 
 				// Get top tracks
 				$topTracks = $tracks->sortByDesc('plays_count')->take(3)->map(function($track) {
-					return [
-						'id' => $track->id,
-						'title' => $track->title,
-						'is_liked' => $track->likes()->where('user_id', auth()->user()->id)->exists(),
-						'plays_count' => $track->plays_count,
-						'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
-						'is_explicit' => $track->is_explicit,
-						'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
-					];
+					return $track;
+					// return [
+					// 	'id' => $track->id,
+					// 	'title' => $track->title,
+					// 	'is_liked' => $track->likes()->where('user_id', auth()->user()->id)->exists(),
+					// 	'plays_count' => $track->plays_count,
+					// 	'cover_image' => $track->cover_image_path ?  $track->cover_image_path : null,
+					// 	'is_explicit' => $track->is_explicit,
+					// 	'audio_file' => $track->audio_file_path ?  $track->audio_file_path : null,
+					// ];
 				})->values();
 
 				return [
